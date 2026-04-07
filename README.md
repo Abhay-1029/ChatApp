@@ -41,6 +41,18 @@ Real-time communication is handled using **WebSockets**, ensuring instant messag
 
 ---
 
+## Channel Layer
+
+This project uses:
+
+* **InMemoryChannelLayer** for development
+* WebSocket communication handled using Django Channels
+
+Note:
+For production deployment, Redis can be used as the channel layer.
+
+---
+
 # 🔐 Authentication Flow
 
 * User Signup
