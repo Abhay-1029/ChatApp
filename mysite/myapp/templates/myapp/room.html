@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ chatroom.name }} Chatroom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#f5f7fb] text-slate-900">
+    {{request.user.username|json_script:"json-username"}}
+    {{chatroom.slug|json_script:"json-chatroomname"}}
+
+    <div class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(123,92,255,0.10),_transparent_34%),linear-gradient(180deg,_#f8fbff_0%,_#f3f5fb_100%)]">
+        <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="mb-5 rounded-2xl border {% if 'error' in message.tags %}border-rose-200 bg-rose-50 text-rose-700{% else %}border-emerald-200 bg-emerald-50 text-emerald-700{% endif %} px-5 py-4 text-sm font-semibold shadow-sm">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h1 class="text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">{{chatroom.name}}</h1>
+                    <p class="mt-2 text-xl text-slate-600">
+                        Real-time conversation
+                        {% if chatroom.owner %}
+                            | Owner: {{ chatroom.owner.username }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-xl font-semibold text-slate-800 shadow-sm">
+                        <span class="h-3 w-3 rounded-full bg-emerald-500"></span>
+                        Live
+                    </div>
+                    {% if chatroom.slug == 'work' or chatroom.slug == 'tech' %}
+                    <div class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm">
+                        Default Room
+                    </div>
+                    {% elif chatroom.owner_id == request.user.id %}
+                    <form method="POST" action="{% url 'delete_room' chatroom.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="rounded-full bg-gradient-to-r from-rose-500 to-red-500 px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(239,68,68,0.22)] transition hover:translate-y-[-1px]" onclick="return confirm('Delete this room? This will also remove its messages.');">
+                            Delete Room
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{% url 'leave_room' chatroom.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:text-[#6d28d9]">
+                            Leave Room
+                        </button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="rounded-full bg-gradient-to-r from-[#6d28d9] to-[#7c3aed] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(109,40,217,0.22)] transition hover:translate-y-[-1px]">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mb-5 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-violet-600">Share Room</p>
+                        <p class="mt-1 text-sm text-slate-500">Send this link to others so they can join this room.</p>
+                    </div>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center lg:min-w-[420px]">
+                        <input id="share-room-link" type="text" readonly value="{{ share_url }}" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none">
+                        <button id="copy-room-link" type="button" class="rounded-2xl bg-gradient-to-r from-[#6d28d9] to-[#7c3aed] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(109,40,217,0.22)] transition hover:translate-y-[-1px]">
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-5 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-violet-600">Room Presence</p>
+                        <p class="mt-1 text-sm text-slate-500">Live online status of users currently active in this room.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                            <span id="online-count">1</span> online
+                        </div>
+                        <div id="online-users" class="flex flex-wrap gap-2">
+                            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+                                {{request.user.username}} (you)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(123,92,255,0.18)]">
+                <div class="bg-gradient-to-r from-[#7c3aed] via-[#6d28d9] to-[#4f46e5] px-6 py-6 text-white">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="h-14 w-14 rounded-3xl bg-white/15"></div>
+                            <div>
+                                <p class="text-sm text-white/80">Room</p>
+                                <h2 class="text-2xl font-bold">{{chatroom.name}}</h2>
+                            </div>
+                        </div>
+                        <p class="text-lg font-semibold text-white/90">Signed in as {{request.user.username}}</p>
+                    </div>
+                </div>
+
+                <div id="chat-messages" class="min-h-0 flex-1 space-y-4 overflow-y-auto bg-white px-5 py-8 sm:px-6">
+                    {% for chat_message in room_messages %}
+                    <div data-message-id="{{ chat_message.id }}" class="{% if chat_message.user.username == request.user.username %}ml-auto bg-gradient-to-r from-[#6d28d9] to-[#5b21b6] text-white{% else %}mr-auto bg-[#f3f4f6] text-slate-900{% endif %} max-w-[78%] rounded-[22px] px-6 py-4 shadow-sm">
+                        <p class="text-sm font-bold uppercase tracking-wide {% if chat_message.user.username == request.user.username %}text-white/70{% else %}text-slate-500{% endif %}">{{chat_message.user.username}}</p>
+                        {% if chat_message.message_content %}
+                        <p class="mt-2 text-2xl leading-snug sm:text-[19px]">{{chat_message.message_content}}</p>
+                        {% endif %}
+                        {% if chat_message.attachment %}
+                            {% if chat_message.attachment.url|lower|slice:"-4:" == ".png" or chat_message.attachment.url|lower|slice:"-4:" == ".jpg" or chat_message.attachment.url|lower|slice:"-5:" == ".jpeg" or chat_message.attachment.url|lower|slice:"-4:" == ".gif" or chat_message.attachment.url|lower|slice:"-5:" == ".webp" %}
+                            <a href="{{ chat_message.attachment.url }}" target="_blank" class="mt-3 block">
+                                <img src="{{ chat_message.attachment.url }}" alt="Shared image" class="max-h-72 rounded-2xl object-cover shadow-md">
+                            </a>
+                            {% else %}
+                            <a href="{{ chat_message.attachment.url }}" target="_blank" class="mt-3 inline-flex items-center rounded-2xl border border-current/20 bg-black/5 px-4 py-3 text-sm font-semibold underline-offset-2 hover:underline">
+                                {{ chat_message.attachment.name|cut:"chat_attachments/" }}
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                        {% if chat_message.user.username == request.user.username %}
+                        <p class="mt-2 text-xs font-semibold {% if chat_message.is_seen %}text-sky-200{% else %}text-white/70{% endif %}" data-receipt-for="{{ chat_message.id }}">
+                            {% if chat_message.is_seen %}Seen ✓✓{% else %}Sent ✓✓{% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div id="empty-message-state" class="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-slate-400">
+                        No messages yet.
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="border-t border-slate-100 bg-slate-50/80 px-5 py-3 sm:px-6">
+                    <p id="typing-indicator" class="min-h-[24px] text-sm font-medium text-violet-700"></p>
+                </div>
+
+                <form action="" method="POST" class="border-t border-slate-200 bg-white p-4 sm:p-5">
+                    {% csrf_token %}
+                    <div class="flex items-center gap-3 rounded-full border border-slate-200 bg-white p-2 shadow-sm">
+                        <input type="file" id="attachment-input" class="hidden" accept="image/*,.pdf,.doc,.docx,.txt,.zip,.rar,.xlsx,.xls,.ppt,.pptx">
+                        <button id="attachment-button" type="button" class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xl font-bold text-slate-600 transition hover:border-violet-300 hover:text-violet-700">
+                            +
+                        </button>
+                        <input type="text" name="message" placeholder="Write a message..." id="message-input" class="w-full rounded-full border-0 bg-transparent px-4 py-3 text-2xl text-slate-700 placeholder:text-slate-400 outline-none focus:ring-0 sm:text-lg">
+                        <button id="send-button" type="button" class="rounded-full bg-gradient-to-r from-[#6d28d9] to-[#7c3aed] px-6 py-3 text-lg font-bold text-white shadow-[0_10px_25px_rgba(109,40,217,0.35)] transition hover:scale-[1.02] sm:px-7 sm:text-base">
+                            Send
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const username = JSON.parse(
+            document.getElementById("json-username").textContent
+        );
+        const chatRoomName = JSON.parse(
+            document.getElementById('json-chatroomname').textContent
+        );
+        const chatMessages = document.getElementById('chat-messages');
+        const onlineUsersContainer = document.getElementById('online-users');
+        const onlineCountElement = document.getElementById('online-count');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const messageInput = document.getElementById('message-input');
+        const attachmentInput = document.getElementById('attachment-input');
+        const attachmentButton = document.getElementById('attachment-button');
+        const pendingReadReceiptIds = new Set();
+        let typingTimer = null;
+        let isTyping = false;
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/' + chatRoomName + "/"
+        );
+
+        const renderOnlineUsers = (onlineUsers) => {
+            onlineUsersContainer.innerHTML = '';
+
+            if (!onlineUsers.length) {
+                const emptyBadge = document.createElement('span');
+                emptyBadge.className = 'rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-500';
+                emptyBadge.textContent = 'No users online';
+                onlineUsersContainer.appendChild(emptyBadge);
+                onlineCountElement.textContent = '0';
+                return;
+            }
+
+            onlineUsers.forEach((onlineUser) => {
+                const badge = document.createElement('span');
+                badge.className = onlineUser === username
+                    ? 'rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700'
+                    : 'rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700';
+                badge.textContent = onlineUser === username ? onlineUser + ' (you)' : onlineUser;
+                onlineUsersContainer.appendChild(badge);
+            });
+
+            onlineCountElement.textContent = String(onlineUsers.length);
+        };
+
+        const renderTypingUsers = (typingUsers) => {
+            const otherTypingUsers = typingUsers.filter((typingUser) => typingUser !== username);
+
+            if (!otherTypingUsers.length) {
+                typingIndicator.textContent = '';
+                return;
+            }
+
+            if (otherTypingUsers.length === 1) {
+                typingIndicator.textContent = otherTypingUsers[0] + ' is typing...';
+                return;
+            }
+
+            typingIndicator.textContent = otherTypingUsers.join(', ') + ' are typing...';
+        };
+
+        const sendTypingState = (typingState) => {
+            if (chatSocket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
+            chatSocket.send(JSON.stringify({
+                'type': 'typing',
+                'is_typing': typingState,
+                'username': username,
+                'room': chatRoomName,
+            }));
+        };
+
+        const stopTyping = () => {
+            if (!isTyping) {
+                return;
+            }
+            isTyping = false;
+            sendTypingState(false);
+        };
+
+        const updateReceipt = (messageId, seen) => {
+            const receiptElement = document.querySelector('[data-receipt-for="' + messageId + '"]');
+            if (!receiptElement) {
+                return;
+            }
+            receiptElement.textContent = seen ? 'Seen ✓✓' : 'Sent ✓✓';
+            receiptElement.className = 'mt-2 text-xs font-semibold ' + (seen ? 'text-sky-200' : 'text-white/70');
+        };
+
+        const createAttachmentNode = (attachmentUrl, attachmentName, isImage, isCurrentUser) => {
+            if (!attachmentUrl) {
+                return null;
+            }
+
+            if (isImage) {
+                const imageLink = document.createElement('a');
+                imageLink.href = attachmentUrl;
+                imageLink.target = '_blank';
+                imageLink.className = 'mt-3 block';
+
+                const image = document.createElement('img');
+                image.src = attachmentUrl;
+                image.alt = 'Shared image';
+                image.className = 'max-h-72 rounded-2xl object-cover shadow-md';
+                imageLink.appendChild(image);
+                return imageLink;
+            }
+
+            const fileLink = document.createElement('a');
+            fileLink.href = attachmentUrl;
+            fileLink.target = '_blank';
+            fileLink.className = 'mt-3 inline-flex items-center rounded-2xl border px-4 py-3 text-sm font-semibold underline-offset-2 hover:underline ' +
+                (isCurrentUser ? 'border-white/20 bg-black/5 text-white' : 'border-slate-300 bg-slate-100 text-slate-800');
+            fileLink.textContent = attachmentName || 'Open file';
+            return fileLink;
+        };
+
+        const queueReadReceipt = (messageId) => {
+            if (!messageId) {
+                return;
+            }
+            pendingReadReceiptIds.add(messageId);
+            if (chatSocket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+            chatSocket.send(JSON.stringify({
+                'type': 'read_receipt',
+                'message_ids': Array.from(pendingReadReceiptIds),
+                'username': username,
+                'room': chatRoomName,
+            }));
+            pendingReadReceiptIds.clear();
+        };
+
+        chatSocket.onmessage = function(e){
+            console.log('This is a message');
+            const data = JSON.parse(e.data);
+            if (data.type === 'presence') {
+                renderOnlineUsers(data.online_users || []);
+            } else if (data.type === 'typing') {
+                renderTypingUsers(data.typing_users || []);
+            } else if (data.type === 'read_receipt') {
+                (data.message_ids || []).forEach((messageId) => updateReceipt(messageId, true));
+            } else if(data.message || data.attachment_url){
+                console.log("Received message to the client is: ", data.message);
+
+                const emptyState = document.getElementById('empty-message-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+
+                const messageWrapper = document.createElement('div');
+                const isCurrentUser = data.username === username;
+                messageWrapper.setAttribute('data-message-id', data.message_id);
+                messageWrapper.className = (isCurrentUser
+                    ? 'ml-auto bg-gradient-to-r from-[#6d28d9] to-[#5b21b6] text-white '
+                    : 'mr-auto bg-[#f3f4f6] text-slate-900 ') + 'max-w-[78%] rounded-[22px] px-6 py-4 shadow-sm';
+
+                const usernameElement = document.createElement('p');
+                usernameElement.className = isCurrentUser
+                    ? 'text-sm font-bold uppercase tracking-wide text-white/70'
+                    : 'text-sm font-bold uppercase tracking-wide text-slate-500';
+                usernameElement.textContent = data.username;
+
+                const messageElement = document.createElement('p');
+                messageElement.className = 'mt-2 text-2xl leading-snug sm:text-[19px]';
+                messageElement.textContent = data.message;
+
+                messageWrapper.appendChild(usernameElement);
+                if (data.message) {
+                    messageWrapper.appendChild(messageElement);
+                }
+
+                const attachmentNode = createAttachmentNode(data.attachment_url, data.attachment_name, data.is_image, isCurrentUser);
+                if (attachmentNode) {
+                    messageWrapper.appendChild(attachmentNode);
+                }
+
+                if (isCurrentUser) {
+                    const receiptElement = document.createElement('p');
+                    receiptElement.className = data.is_seen ? 'mt-2 text-xs font-semibold text-sky-200' : 'mt-2 text-xs font-semibold text-white/70';
+                    receiptElement.setAttribute('data-receipt-for', data.message_id);
+                    receiptElement.textContent = data.is_seen ? 'Seen ✓✓' : 'Sent ✓✓';
+                    messageWrapper.appendChild(receiptElement);
+                } else {
+                    queueReadReceipt(data.message_id);
+                }
+
+                chatMessages.appendChild(messageWrapper);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }else{
+                alert("The message is empty");
+            }
+        };
+
+        chatSocket.onclose = function(e){
+            console.log('Socket closed');
+        };
+
+        document.getElementById('send-button').onclick = function(e){
+            e.preventDefault();
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                messageInput.focus();
+                return;
+            }
+
+            if (typingTimer) {
+                clearTimeout(typingTimer);
+            }
+            stopTyping();
+
+            chatSocket.send(JSON.stringify({
+                'message':message,
+                'username':username,
+                'room':chatRoomName,
+            }));
+
+            messageInput.value = "";
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            messageInput.focus();
+        };
+
+        messageInput.addEventListener('input', function() {
+            if (messageInput.value.trim()) {
+                if (!isTyping) {
+                    isTyping = true;
+                    sendTypingState(true);
+                }
+                if (typingTimer) {
+                    clearTimeout(typingTimer);
+                }
+                typingTimer = setTimeout(function() {
+                    stopTyping();
+                }, 1200);
+            } else {
+                if (typingTimer) {
+                    clearTimeout(typingTimer);
+                }
+                stopTyping();
+            }
+        });
+
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('send-button').click();
+            }
+        });
+
+        messageInput.addEventListener('blur', function() {
+            if (typingTimer) {
+                clearTimeout(typingTimer);
+            }
+            stopTyping();
+        });
+
+        document.getElementById('copy-room-link').onclick = function() {
+            const shareInput = document.getElementById('share-room-link');
+            shareInput.select();
+            shareInput.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(shareInput.value).then(function() {
+                document.getElementById('copy-room-link').textContent = 'Copied';
+                setTimeout(function() {
+                    document.getElementById('copy-room-link').textContent = 'Copy Link';
+                }, 1500);
+            });
+        };
+
+        attachmentButton.onclick = function() {
+            attachmentInput.click();
+        };
+
+        attachmentInput.addEventListener('change', function() {
+            const selectedFile = attachmentInput.files[0];
+            if (!selectedFile) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('attachment', selectedFile);
+
+            fetch('/rooms/' + chatRoomName + '/upload/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+                body: formData,
+            }).then(function(response) {
+                return response.json();
+            }).then(function(data) {
+                if (!data.success && data.error) {
+                    alert(data.error);
+                }
+            }).catch(function() {
+                alert('File upload failed.');
+            }).finally(function() {
+                attachmentInput.value = '';
+            });
+        });
+
+        document.querySelectorAll('[data-message-id]').forEach(function(messageNode) {
+            const messageId = messageNode.getAttribute('data-message-id');
+            const receiptNode = messageNode.querySelector('[data-receipt-for]');
+            if (!receiptNode) {
+                queueReadReceipt(messageId);
+            }
+        });
+    </script>
+</body>
+</html>

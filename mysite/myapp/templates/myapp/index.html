@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Rooms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#f5f7fb] text-slate-900">
+    <div class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(123,92,255,0.10),_transparent_34%),linear-gradient(180deg,_#f8fbff_0%,_#f3f5fb_100%)]">
+        <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+            <div class="mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <h1 class="text-center text-4xl font-black tracking-tight text-slate-900 sm:text-left sm:text-5xl">
+                    Chat Room List
+                </h1>
+                <div class="flex items-center justify-center gap-3 sm:justify-end">
+                    <div class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                        {{ request.user.username }}
+                    </div>
+                    <form method="POST" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="rounded-full bg-gradient-to-r from-[#6d28d9] to-[#7c3aed] px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(109,40,217,0.22)] transition hover:translate-y-[-1px]">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="mb-6 rounded-2xl border {% if 'error' in message.tags %}border-rose-200 bg-rose-50 text-rose-700{% else %}border-emerald-200 bg-emerald-50 text-emerald-700{% endif %} px-5 py-4 text-sm font-semibold shadow-sm">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="mb-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-violet-600">Join Room</p>
+                        <h2 class="mt-2 text-2xl font-black text-slate-900">Paste a shared room link</h2>
+                        <p class="mt-2 text-slate-500">Paste any shared room URL here and jump straight into that room.</p>
+                    </div>
+                    <form method="POST" class="w-full max-w-2xl">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="join_room">
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <div class="flex-1">
+                                {{ join_form.share_link }}
+                                {% if join_form.share_link.errors %}
+                                    {% for error in join_form.share_link.errors %}
+                                    <p class="mt-2 text-sm text-rose-600">{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] transition hover:translate-y-[-1px]">
+                                Join Room
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mb-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-violet-600">Create Room</p>
+                        <h2 class="mt-2 text-2xl font-black text-slate-900">Make your own chat room</h2>
+                        <p class="mt-2 text-slate-500">Create a room, open it instantly, and share its link with others.</p>
+                    </div>
+                    <form method="POST" class="w-full max-w-2xl">
+                        {% csrf_token %}
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <div class="flex-1">
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    {% for error in form.name.errors %}
+                                    <p class="mt-2 text-sm text-rose-600">{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="rounded-2xl bg-gradient-to-r from-[#6d28d9] to-[#7c3aed] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(109,40,217,0.22)] transition hover:translate-y-[-1px]">
+                                Create Room
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                {% for chatroom in chatrooms %}
+                <a href="{% url 'chatroom' chatroom.slug %}" class="block rounded-[28px] border border-slate-200 bg-white px-8 py-9 shadow-[0_10px_30px_rgba(15,23,42,0.10)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(123,92,255,0.18)]">
+                    <div class="flex items-center gap-6">
+                        <div class="flex h-18 w-18 min-h-[72px] min-w-[72px] items-center justify-center rounded-2xl bg-gradient-to-br from-[#4f46e5] to-[#9333ea] text-4xl font-bold text-white shadow-[0_10px_30px_rgba(123,92,255,0.35)]">
+                            {{ chatroom.name|first|lower }}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h2 class="text-3xl font-extrabold text-[#4338ca]">{{ chatroom.name }}</h2>
+                                    <p class="mt-2 text-base text-slate-500">
+                                        Open this room and continue the real-time conversation.
+                                        {% if chatroom.owner %}
+                                            Created by {{ chatroom.owner.username }}.
+                                        {% elif chatroom.slug == 'work' or chatroom.slug == 'tech' %}
+                                            Default room for all users.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="text-4xl font-black text-slate-800 transition group-hover:scale-105">
+                                    ->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="rounded-[28px] border border-dashed border-slate-300 bg-white px-8 py-16 text-center text-lg text-slate-500 shadow-sm">
+                    No rooms available yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
