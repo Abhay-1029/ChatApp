@@ -1,4 +1,4 @@
-# 💬 Real-Time Chat Application using Django Channels
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/9147821c-deab-47a9-b54c-4b2d94f9bb3b" /># 💬 Real-Time Chat Application using Django Channels
 
 A full-featured **real-time chat application** built using **Django**, **Django Channels**, and **WebSockets**.
 This application allows authenticated users to create chat rooms, join shared rooms, send real-time messages, share attachments, and track user presence live.
@@ -217,25 +217,48 @@ Security rules:
 # 📂 Project Structure
 
 ```
-chatapp/
+# 📂 Project Structure
+
+```
+ChatApp/
 │
-├── mysite/
-│   ├── settings.py
-│   ├── urls.py
-│   ├── asgi.py
+├── mysite/                     # Django Project Configuration
+│   ├── __init__.py
+│   ├── asgi.py                 # ASGI config (Django Channels entry point)
+│   ├── settings.py             # Project settings
+│   ├── urls.py                 # Root URL configuration
+│   └── wsgi.py
 │
-├── chat/
-│   ├── models.py
-│   ├── views.py
-│   ├── consumers.py
-│   ├── routing.py
-│   ├── urls.py
+├── myapp/                      # Main Chat Application
+│   │
+│   ├── migrations/             # Database migrations
+│   │
+│   ├── templates/
+│   │   └── myapp/
+│   │       ├── index.html      # Room list page
+│   │       ├── login.html      # Login page
+│   │       ├── signup.html     # Signup page
+│   │       └── room.html       # Chat room UI
+│   │
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── consumers.py            # WebSocket logic
+│   ├── forms.py                # Authentication & room forms
+│   ├── models.py               # Database models
+│   ├── routing.py              # WebSocket routing
+│   ├── tests.py
+│   ├── urls.py                 # App URL routing
+│   └── views.py                # Django views
 │
-├── templates/
-├── static/
-├── media/
-├── db.sqlite3
-└── manage.py
+├── media/                      # Uploaded files & images
+│
+├── db.sqlite3                 # SQLite database
+├── manage.py                  # Django management script
+├── .gitignore                 # Ignored files
+
+```
+
 ```
 
 ---
