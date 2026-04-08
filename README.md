@@ -217,45 +217,46 @@ Security rules:
 # 📂 Project Structure
 
 ```
-# 📂 Project Structure
-
-```
 ChatApp/
 │
-├── mysite/                     # Django Project Configuration
+├── mysite/
 │   ├── __init__.py
-│   ├── asgi.py                 # ASGI config (Django Channels entry point)
-│   ├── settings.py             # Project settings
-│   ├── urls.py                 # Root URL configuration
+│   ├── asgi.py              # ASGI config for Django Channels
+│   ├── settings.py          # Project settings
+│   ├── urls.py              # Root URL configuration
 │   └── wsgi.py
 │
-├── myapp/                      # Main Chat Application
+├── myapp/
 │   │
-│   ├── migrations/             # Database migrations
+│   ├── migrations/
 │   │
 │   ├── templates/
 │   │   └── myapp/
-│   │       ├── index.html      # Room list page
-│   │       ├── login.html      # Login page
-│   │       ├── signup.html     # Signup page
-│   │       └── room.html       # Chat room UI
+│   │       ├── index.html
+│   │       ├── login.html
+│   │       ├── signup.html
+│   │       └── room.html
 │   │
 │   ├── __init__.py
 │   ├── admin.py
 │   ├── apps.py
-│   ├── consumers.py            # WebSocket logic
-│   ├── forms.py                # Authentication & room forms
-│   ├── models.py               # Database models
-│   ├── routing.py              # WebSocket routing
+│   ├── consumers.py         # WebSocket logic
+│   ├── forms.py
+│   ├── models.py
+│   ├── routing.py
 │   ├── tests.py
-│   ├── urls.py                 # App URL routing
-│   └── views.py                # Django views
+│   ├── urls.py
+│   └── views.py
 │
-├── media/                      # Uploaded files & images
+├── media/                   # Uploaded files
 │
-├── db.sqlite3                 # SQLite database
-├── manage.py                  # Django management script
-├── .gitignore                 # Ignored files
+├── db.sqlite3
+├── manage.py
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
+
 
 ```
 
