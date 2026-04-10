@@ -365,4 +365,28 @@ Suitable for:
 * Internship showcase
 
 ---
+# 📸 Screenshots
+
+## 🔐 Login Page
+
+![Login](screenshots/login.png)
+
+---
+
+## 📝 Signup Page
+
+![Signup](screenshots/signup.png)
+
+---
+
+## 🏠 Room List Page
+
+![Rooms](screenshots/rooms.png)
+
+---
+
+## 💬 Chat Room Page
+
+![Chat](screenshots/chat.png)
+
 
