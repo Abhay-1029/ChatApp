@@ -1,4 +1,3 @@
-<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/9147821c-deab-47a9-b54c-4b2d94f9bb3b" /># 💬 Real-Time Chat Application using Django Channels
 
 A full-featured **real-time chat application** built using **Django**, **Django Channels**, and **WebSockets**.
 This application allows authenticated users to create chat rooms, join shared rooms, send real-time messages, share attachments, and track user presence live.
