@@ -14,7 +14,6 @@ Authenticated users can:
 * Join rooms via shared links
 * Send messages in real-time
 * Share files and images
-* See typing indicators
 * Track online users
 * Receive read receipts
 
@@ -141,17 +140,6 @@ Typing indicator shows:
 
 ---
 
-# 👁️ Read Receipts
-
-Message status includes:
-
-* ✅ Sent (Gray double tick)
-* 👀 Seen (Blue double tick)
-
-Seen status updates automatically when another user views the message.
-
----
-
 # 📎 Attachment Sharing
 
 Users can share:
@@ -189,7 +177,6 @@ Stores:
 * Room
 * Message content
 * Timestamp
-* Seen status
 * Optional attachment
 
 ## Django User
@@ -318,9 +305,7 @@ http://127.0.0.1:8000/
 ✔ Room-based chat
 ✔ Authentication system
 ✔ WebSocket integration
-✔ Typing indicator
 ✔ Online users tracking
-✔ Read receipts
 ✔ File & image sharing
 ✔ Secure room access
 ✔ Tailwind UI
