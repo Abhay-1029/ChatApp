@@ -130,16 +130,6 @@ Room-level presence tracking:
 
 ---
 
-# ⌨️ Typing Indicator
-
-Typing indicator shows:
-
-* When a user starts typing
-* Displays **"typing..."** message
-* Uses debounce logic to avoid spam
-
----
-
 # 📎 Attachment Sharing
 
 Users can share:
